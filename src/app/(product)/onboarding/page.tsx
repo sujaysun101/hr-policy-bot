@@ -1,5 +1,6 @@
 import { CreateOrganization } from "@clerk/nextjs"
 import { redirect } from "next/navigation"
+import { resolveClerkKeys } from "@/lib/auth"
 import { requireUser } from "@/lib/guard"
 
 export const metadata = { title: "Create your company" }
@@ -8,7 +9,8 @@ export const dynamic = "force-dynamic"
 export default async function OnboardingPage() {
   const session = await requireUser()
   if (session.orgId) redirect("/home")
-  const showClerk = process.env.NODE_ENV === "development" || Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+  const { publishableKey } = await resolveClerkKeys()
+  const showClerk = Boolean(publishableKey)
   return (
     <div className="mx-auto max-w-lg">
       <h1 className="font-heading text-3xl tracking-tight">Create your company</h1>

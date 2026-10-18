@@ -21,15 +21,26 @@ export function clerkKeysConfigured(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY)
 }
 
-export async function resolveClerkKeys(): Promise<{ publishableKey?: string; secretKey?: string }> {
+const globalForClerk = globalThis as typeof globalThis & {
+  __handbooklyClerkKeys?: Promise<{ publishableKey?: string; secretKey?: string }>
+}
+
+async function resolveClerkKeysOnce(): Promise<{ publishableKey?: string; secretKey?: string }> {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || undefined
   const secretKey = process.env.CLERK_SECRET_KEY || undefined
   if (publishableKey && secretKey) return { publishableKey, secretKey }
   if (process.env.NODE_ENV !== "development") return { publishableKey, secretKey }
   if (process.env.NEXT_PUBLIC_CLERK_KEYLESS_DISABLED === "true") return { publishableKey, secretKey }
   try {
-    const { keyless } = await import("@clerk/nextjs/dist/esm/server/keyless-node.js")
-    const keys = await keyless().resolveKeysWithKeylessFallback(publishableKey, secretKey)
+    const { clerkKeyless } = await import("@/lib/clerk-keyless")
+    const keys = await Promise.race([
+      clerkKeyless().resolveKeysWithKeylessFallback(publishableKey, secretKey),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+    ])
+    if (!keys) {
+      console.error("Clerk keyless mode timed out. Sign-in stays unavailable until keys are set.")
+      return { publishableKey, secretKey }
+    }
     return {
       publishableKey: keys.publishableKey || publishableKey,
       secretKey: keys.secretKey || secretKey,
@@ -38,6 +49,13 @@ export async function resolveClerkKeys(): Promise<{ publishableKey?: string; sec
     console.error("Clerk keyless mode could not start.", error instanceof Error ? error.message : "keyless error")
     return { publishableKey, secretKey }
   }
+}
+
+export function resolveClerkKeys(): Promise<{ publishableKey?: string; secretKey?: string }> {
+  if (!globalForClerk.__handbooklyClerkKeys) {
+    globalForClerk.__handbooklyClerkKeys = resolveClerkKeysOnce()
+  }
+  return globalForClerk.__handbooklyClerkKeys
 }
 
 export async function getSession(): Promise<AppSession | null> {

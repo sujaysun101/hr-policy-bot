@@ -1,10 +1,12 @@
 import { SignIn } from "@clerk/nextjs"
 import { AuthSplit } from "@/components/auth/auth-split"
+import { resolveClerkKeys } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 
-export default function SignInPage() {
-  const showClerk = process.env.NODE_ENV === "development" || Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+export default async function SignInPage() {
+  const { publishableKey } = await resolveClerkKeys()
+  const showClerk = Boolean(publishableKey)
   return (
     <AuthSplit title="Ask the handbook. Cite the section.">
       {showClerk ? (

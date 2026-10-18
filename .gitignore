@@ -37,6 +37,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Clerk keyless dev instance (contains an unclaimed secret key)
+.clerk/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# clerk configuration (can include secrets)
+/.clerk/

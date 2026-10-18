@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Fraunces, Source_Sans_3 } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Providers } from "@/components/providers"
+import { resolveClerkKeys } from "@/lib/auth"
 import "./globals.css"
 
 const sourceSans = Source_Sans_3({
@@ -47,8 +48,8 @@ const clerkAppearance = {
   },
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const enableClerk = process.env.NODE_ENV === "development" || Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { publishableKey } = await resolveClerkKeys()
   const body = (
     <Providers>
       {children}
@@ -57,7 +58,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${sourceSans.variable} ${fraunces.variable} h-full`} suppressHydrationWarning>
       <body className="min-h-full antialiased">
-        {enableClerk ? <ClerkProvider appearance={clerkAppearance}>{body}</ClerkProvider> : body}
+        {publishableKey ? <ClerkProvider publishableKey={publishableKey} appearance={clerkAppearance}>{body}</ClerkProvider> : body}
       </body>
     </html>
   )

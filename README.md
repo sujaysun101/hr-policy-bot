@@ -34,6 +34,7 @@ Copy `.env.example`. Names only — do not commit secrets.
 | `AI_MODEL` | Claude model id. Default `claude-sonnet-4-6`. |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key. |
 | `CLERK_SECRET_KEY` | Clerk secret key. |
+| `CLERK_ENCRYPTION_KEY` | Optional. Needed when Clerk keys are supplied to middleware at runtime. Handbookly sets a local fallback if this is empty. |
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Optional. App uses `/sign-in`. |
 | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Optional. App uses `/sign-up`. |
 | `NEXT_PUBLIC_CLERK_KEYLESS_DISABLED` | Set to `true` to skip keyless mode in development. |

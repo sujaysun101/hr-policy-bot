@@ -1,6 +1,6 @@
 "use client"
 
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import type { AnalyticsSnapshot } from "@/lib/types"
 
 const PIE = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"]
@@ -8,7 +8,7 @@ const PIE = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"]
 export function QuestionChart({ series }: { series: AnalyticsSnapshot["series"] }) {
   return (
     <div className="h-56 w-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 640, height: 224 }}>
         <AreaChart data={series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid stroke="var(--border)" vertical={false} />
           <XAxis dataKey="label" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} interval={4} axisLine={false} tickLine={false} />
@@ -22,14 +22,22 @@ export function QuestionChart({ series }: { series: AnalyticsSnapshot["series"] 
   )
 }
 
+function axisLabel(section: string): string {
+  const numbered = section.match(/^(\d+(?:\.\d+)?)\s+(.+)$/)
+  const title = numbered?.[2] ?? section
+  const clipped = title.length > 20 ? `${title.slice(0, 19).trimEnd()}…` : title
+  return numbered ? `${numbered[1]} ${clipped}` : clipped
+}
+
 export function SectionChart({ sections }: { sections: AnalyticsSnapshot["topSections"] }) {
+  const data = sections.map((section) => ({ ...section, label: axisLabel(section.section) }))
   return (
-    <div className="h-56 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={sections} layout="vertical" margin={{ top: 4, right: 8, left: 8, bottom: 0 }}>
+    <div className="h-64 w-full">
+      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 520, height: 256 }}>
+        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
           <CartesianGrid stroke="var(--border)" horizontal={false} />
           <XAxis type="number" allowDecimals={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
-          <YAxis type="category" dataKey="section" width={120} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis type="category" dataKey="label" width={156} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
           <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} />
           <Bar dataKey="count" name="Citations" fill="var(--chart-1)" radius={[0, 6, 6, 0]} />
         </BarChart>
@@ -42,13 +50,14 @@ export function MixChart({ mix }: { mix: AnalyticsSnapshot["mix"] }) {
   if (mix.length === 0) return <p className="text-sm text-muted-foreground">No questions in the last 30 days.</p>
   return (
     <div className="h-56 w-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 360, height: 224 }}>
         <PieChart>
-          <Pie data={mix} dataKey="value" nameKey="name" innerRadius={52} outerRadius={78} paddingAngle={3}>
+          <Pie data={mix} dataKey="value" nameKey="name" innerRadius={58} outerRadius={86} paddingAngle={3} cx="50%" cy="46%">
             {mix.map((entry, index) => (
               <Cell key={entry.name} fill={PIE[index % PIE.length]} />
             ))}
           </Pie>
+          <Legend verticalAlign="bottom" height={28} />
           <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} />
         </PieChart>
       </ResponsiveContainer>

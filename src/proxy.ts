@@ -5,10 +5,9 @@ import { resolveClerkKeys } from "@/lib/auth"
 const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/demo(.*)", "/api/demo(.*)"])
 
 export default async function proxy(request: NextRequest, event: NextFetchEvent) {
-  if (isPublicRoute(request)) return NextResponse.next()
-
   const keys = await resolveClerkKeys()
   if (!keys.publishableKey || !keys.secretKey) {
+    if (isPublicRoute(request)) return NextResponse.next()
     const url = request.nextUrl.clone()
     url.pathname = "/sign-in"
     url.searchParams.set("redirect_url", request.nextUrl.pathname)
@@ -17,7 +16,7 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
 
   const handle = clerkMiddleware(
     async (auth) => {
-      await auth.protect()
+      if (!isPublicRoute(request)) await auth.protect()
     },
     {
       publishableKey: keys.publishableKey,
