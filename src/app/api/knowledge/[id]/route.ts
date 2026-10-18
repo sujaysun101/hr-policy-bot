@@ -1,0 +1,14 @@
+import { isResponse, jsonError, requireApiSession } from "@/lib/api"
+
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
+export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const access = await requireApiSession()
+  if (isResponse(access)) return access
+  const { session, store } = access
+  if (session.role !== "hr") return jsonError("Only HR admins can remove knowledge.", 403)
+  const { id } = await context.params
+  await store.deleteKnowledge(session.orgId || "", id)
+  return Response.json({ ok: true })
+}
